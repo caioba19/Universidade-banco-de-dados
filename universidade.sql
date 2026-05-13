@@ -1,3 +1,4 @@
+-- codigo 1 
 create database universidade;
 use universidade;
 create table aluno(
