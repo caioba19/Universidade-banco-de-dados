@@ -1,4 +1,4 @@
--- codigo 1 
+-- codigo 1 professor
 create database universidade;
 use universidade;
 create table aluno(
@@ -96,7 +96,7 @@ create table boletim(
 );
 
 
--- codigo 2;
+-- codigo 2 kauan;
 
 create database universidade;
 use universidade;
@@ -237,7 +237,7 @@ from boletim b
 join disciplina d
 on b.FK_codDisc = d.codDisc;
 
--- codigo 3 
+-- codigo 3 caio
 
 CREATE DATABASE UNIVERSIDADE;
 USE UNIVERSIDADE;
@@ -348,3 +348,176 @@ PRIMARY KEY (fk_codTurma, fk_codDisc, ano_letivo, semestre_letivo),
 
     
     SELECT @@autocommit;
+
+
+-- codigo 4 claude 
+CREATE DATABASE UNIVERSIDADE;
+USE UNIVERSIDADE;
+ 
+CREATE TABLE ALUNO (
+ cpf VARCHAR(15) NOT NULL PRIMARY KEY,
+ nomeAluno VARCHAR(50) NOT NULL,
+ dtNasc DATE NOT NULL,
+ estadoCivil ENUM('Casado', 'Solteiro', 'Viúvo', 'Divorciado'),
+ genero ENUM('Masculino', 'Feminino', 'Outros'),
+ endereco VARCHAR(100),
+ numero VARCHAR(10),
+ complemento VARCHAR(100),
+ bairro VARCHAR(50),
+ cidade VARCHAR(30),
+ UF VARCHAR(2),
+ email VARCHAR(100),
+ telefone VARCHAR(15) NOT NULL,
+ whatsApp BOOL
+);
+ 
+CREATE INDEX idx_nomeAluno ON ALUNO(nomeAluno);
+ 
+CREATE TABLE CURSO (
+ codCurso INT AUTO_INCREMENT PRIMARY KEY,
+ nomeCurso VARCHAR(60) NOT NULL,
+ cargaHoraria INT NOT NULL,
+ modalidade ENUM('Presencial', 'Hibrido', 'EAD')
+);
+ 
+CREATE TABLE PROFESSOR (
+ matProf INT AUTO_INCREMENT PRIMARY KEY,
+ nomeProf VARCHAR(100) NOT NULL,
+ admissao DATE,
+ escolaridade VARCHAR(60),
+ dtNasc DATE NOT NULL,
+ estadoCivil ENUM('Casado', 'Solteiro', 'Viúvo', 'Divorciado'),
+ genero ENUM('Masculino', 'Feminino', 'Outros'),
+ endereco VARCHAR(100),
+ numero VARCHAR(10),
+ complemento VARCHAR(100),
+ bairro VARCHAR(50),
+ cidade VARCHAR(30),
+ UF VARCHAR(2),
+ email VARCHAR(100),
+ telefone VARCHAR(15) NOT NULL,
+ whatsApp BOOL
+);
+ 
+CREATE TABLE TURMA (
+ codTurma INT AUTO_INCREMENT PRIMARY KEY,
+ FK_codCurso INT NOT NULL,
+ turno ENUM('Matutino', 'Vespertino', 'Noturno'),
+ modalidade ENUM('Presencial', 'Hibrido', 'EAD'),
+ ano INT,
+ semestre INT,
+ FOREIGN KEY(FK_codCurso) REFERENCES CURSO(codCurso)
+);
+ 
+CREATE TABLE DISCIPLINA (
+ codDisc INT AUTO_INCREMENT PRIMARY KEY,
+ nomeDisc VARCHAR(60) NOT NULL,
+ cargaHoraria INT NOT NULL,
+ FK_codCurso INT NOT NULL,
+ FK_preRequisito INT,
+ FOREIGN KEY(FK_codCurso) REFERENCES CURSO(codCurso),
+ FOREIGN KEY(FK_preRequisito) REFERENCES DISCIPLINA(codDisc)
+);
+ 
+CREATE TABLE HORARIO (
+ FK_codDisc INT NOT NULL,
+ FK_codTurma INT NOT NULL,
+ FK_matProf INT NOT NULL,
+ dia_semana ENUM('Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'),
+ hora_inicio TIME,
+ hora_fim TIME,
+ ano_letivo YEAR,
+ semestre_letivo INT,
+ PRIMARY KEY(FK_codDisc, FK_codTurma, FK_matProf, ano_letivo, semestre_letivo),
+ FOREIGN KEY(FK_codDisc) REFERENCES DISCIPLINA(codDisc),
+ FOREIGN KEY(FK_codTurma) REFERENCES TURMA(codTurma),
+ FOREIGN KEY(FK_matProf) REFERENCES PROFESSOR(matProf)
+);
+ 
+CREATE TABLE MATRICULA (
+ RA BIGINT NOT NULL PRIMARY KEY,
+ FK_cpf VARCHAR(15) NOT NULL,
+ FK_codCurso INT NOT NULL,
+ FK_codTurma INT NOT NULL,
+ dataMatricula DATE,
+ situacao ENUM('Ativa', 'Trancada', 'Concluída', 'Cancelada'),
+ FOREIGN KEY(FK_cpf) REFERENCES ALUNO(cpf),
+ FOREIGN KEY(FK_codCurso) REFERENCES CURSO(codCurso),
+ FOREIGN KEY(FK_codTurma) REFERENCES TURMA(codTurma)
+);
+ 
+CREATE TABLE BOLETIM (
+ RA BIGINT NOT NULL,
+ FK_codCurso INT NOT NULL,
+ FK_codDisc INT NOT NULL,
+ av1 DOUBLE,
+ av2 DOUBLE,
+ av3 DOUBLE,
+ av4 DOUBLE,
+ sav1 DOUBLE,
+ sav2 DOUBLE,
+ sav3 DOUBLE,
+ frequencia DOUBLE,
+ PRIMARY KEY(RA, FK_codDisc),
+ 
+ CONSTRAINT fk_boletim_matricula
+ FOREIGN KEY(RA)
+ REFERENCES MATRICULA(RA)
+ ON UPDATE CASCADE
+ ON DELETE CASCADE,
+ 
+ CONSTRAINT fk_boletim_curso
+ FOREIGN KEY(FK_codCurso)
+ REFERENCES CURSO(codCurso)
+ ON UPDATE CASCADE
+ ON DELETE RESTRICT,
+ 
+ CONSTRAINT fk_boletim_disciplina
+ FOREIGN KEY(FK_codDisc)
+ REFERENCES DISCIPLINA(codDisc)
+ ON UPDATE CASCADE
+ ON DELETE RESTRICT
+);
+ 
+CREATE TABLE GRADE_CURRICULAR (
+ FK_codCurso INT NOT NULL,
+ FK_codDisc INT NOT NULL,
+ semestre_ideal INT,
+ PRIMARY KEY(FK_codCurso, FK_codDisc),
+ FOREIGN KEY(FK_codCurso) REFERENCES CURSO(codCurso),
+ FOREIGN KEY(FK_codDisc) REFERENCES DISCIPLINA(codDisc)
+);
+ 
+CREATE TABLE OFERTA_DISCIPLINA (
+ id_oferta INT AUTO_INCREMENT PRIMARY KEY,
+ FK_codCurso INT NOT NULL,
+ FK_codDisc INT NOT NULL,
+ ano YEAR,
+ semestre_letivo INT,
+ FOREIGN KEY(FK_codCurso) REFERENCES CURSO(codCurso),
+ FOREIGN KEY(FK_codDisc) REFERENCES DISCIPLINA(codDisc)
+);
+ 
+CREATE VIEW vw_media_alunos AS
+SELECT
+ b.RA,
+ a.nomeAluno,
+ d.nomeDisc,
+ (
+ IFNULL(b.av1, 0) +
+ IFNULL(b.av2, 0) +
+ IFNULL(b.av3, 0) +
+ IFNULL(b.av4, 0)
+ ) / 4 AS mediaFinal,
+ b.frequencia,
+ CASE 
+ WHEN (IFNULL(b.av1, 0) + IFNULL(b.av2, 0) + IFNULL(b.av3, 0) + IFNULL(b.av4, 0)) / 4 >= 7 
+ THEN 'Aprovado'
+ ELSE 'Reprovado'
+ END AS situacao
+FROM BOLETIM b
+JOIN MATRICULA m ON b.RA = m.RA
+JOIN ALUNO a ON m.FK_cpf = a.cpf
+JOIN DISCIPLINA d ON b.FK_codDisc = d.codDisc;
+ 
+SELECT @@autocommit;
